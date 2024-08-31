@@ -1,0 +1,35 @@
+---
+- name: Kubernetes Cluster Boot Strap Process
+  hosts: localhost
+  become: true
+
+  # pre_tasks:
+  #   - name: Include the Vaulted Variables
+  #     ansible.builtin.include_vars:
+  #       file: /home/matt/repos/ansible-vault/farm-vault.yml
+
+  # If you're wondering where the jumpbox is... the host running Ansible in the case would be the jump system, so nothing to prep for there.
+
+  tasks:
+    - name: Clone the Kubernetes-the-hard-way repo locally alongside this repo.
+      ansible.builtin.git:
+        repo: 'https://github.com/kelseyhightower/kubernetes-the-hard-way.git'
+        dest: ../../kubernetes-the-hard-way
+      delegate_to: localhost
+
+    - name: Steal the downloads list for my personal gains
+      ansible.builtin.command:
+        cmd: cat ../../kubernetes-the-hard-way/downloads.txt
+      register: urls
+      delegate_to: localhost
+
+    - name: Debug the above
+      ansible.builtin.debug:
+        var: urls.stdout_lines
+
+    - name: These are my downloads now 😎
+      ansible.builtin.get_url:
+        url: '{{ item }}'
+        dest: downloads/.
+      with_items: urls.stdout_lines
+      delegate_to: localhost

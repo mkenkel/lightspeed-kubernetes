@@ -13,13 +13,14 @@
   # If you're wondering where the jumpbox is... the host running Ansible in the case would be the jump system, so nothing to prep for there.
   vars:
     binaries_dir: /Users/mkenkel/kubernetes-init
+    jump_home_path: /Users/mkenkel
     jump_user: mkenkel
 
   tasks:
     - name: Clone the Kubernetes-the-hard-way repo locally alongside this repo.
       ansible.builtin.git:
         repo: 'https://github.com/kelseyhightower/kubernetes-the-hard-way.git'
-        dest: ../../kubernetes-the-hard-way
+        dest: '{{ jump_home_path }}/kubernetes-the-hard-way'
       delegate_to: localhost
 
     - name: Create the downloads dir locally

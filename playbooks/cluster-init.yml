@@ -17,19 +17,20 @@
         dest: ../../kubernetes-the-hard-way
       delegate_to: localhost
 
-    - name: Steal the downloads list for my personal gains
-      ansible.builtin.command:
-        cmd: cat ../../kubernetes-the-hard-way/downloads.txt
-      register: urls
-      delegate_to: localhost
-
-    - name: Debug the above
-      ansible.builtin.debug:
-        var: urls.stdout_lines
+    - name: Create the downloads dir locally
+      ansible.builtin.file:
+        path: /Users/mkenkel/kubernetes-init
+        state: directory
+        mode: '0775'
+        owner: mkenkel
+        group: staff
 
     - name: These are my downloads now 😎
       ansible.builtin.get_url:
         url: '{{ item }}'
-        dest: downloads/.
-      with_items: urls.stdout_lines
+        dest: /Users/mkenkel/kubernetes-init/.
+        mode: '0775'
+        owner: mkenkel
+        group: staff
+      with_lines: cat ../../kubernetes-the-hard-way/downloads.txt
       delegate_to: localhost

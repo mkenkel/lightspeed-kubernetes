@@ -3,12 +3,17 @@
   hosts: localhost
   become: true
 
+  vars_files: /Users/mkenkel/Repos/ansible-vault/farm-vault.yml
+
   # pre_tasks:
   #   - name: Include the Vaulted Variables
   #     ansible.builtin.include_vars:
   #       file: /home/matt/repos/ansible-vault/farm-vault.yml
 
   # If you're wondering where the jumpbox is... the host running Ansible in the case would be the jump system, so nothing to prep for there.
+  vars:
+    binaries_dir: /Users/mkenkel/kubernetes-init
+    jump_user: mkenkel
 
   tasks:
     - name: Clone the Kubernetes-the-hard-way repo locally alongside this repo.
@@ -19,7 +24,7 @@
 
     - name: Create the downloads dir locally
       ansible.builtin.file:
-        path: /Users/mkenkel/kubernetes-init
+        path: '{{ binaries_dir }}'
         state: directory
         mode: '0775'
         owner: mkenkel
@@ -28,9 +33,17 @@
     - name: These are my downloads now 😎
       ansible.builtin.get_url:
         url: '{{ item }}'
-        dest: /Users/mkenkel/kubernetes-init/.
+        dest: '{{ binaries_dir }}/.'
         mode: '0775'
         owner: mkenkel
         group: staff
       with_lines: cat ../../kubernetes-the-hard-way/downloads.txt
       delegate_to: localhost
+
+    - name: Install kubectl via Homebrew (if on a Mac)
+      community.general.homebrew:
+        name: Kubernetes-cli
+        state: present
+      when: ansible_distribution == 'MacOSX'
+      delegate_to: localhost
+      become_user: '{{ jump_user }}'

@@ -1,6 +1,7 @@
 ---
 - name: Kubernetes Cluster Boot Strap Process
   hosts: kubernetes
+  gather_facts: true
 
   vars_files: /Users/mkenkel/Repos/ansible-vault/farm-vault.yml
 

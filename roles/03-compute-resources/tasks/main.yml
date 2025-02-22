@@ -1,4 +1,7 @@
 ---
+- name: Gather facts rq
+  ansible.builtin.gather_facts:
+
 - name: Copy SSH Pub key out to the hosts's root accounts
   ansible.posix.authorized_key:
     user: root
@@ -9,11 +12,9 @@
   ansible.builtin.debug:
     msg: '{{ ansible_architecture }} || {{ ansible_distribution | trim }} {{ ansible_distribution_major_version }}'
 
-# - name: Make sure an entry in /etc/hosts exists
-#   ansible.builtin.lineinfile:
-#     path: /etc/hosts
-#     regexp: "^{{ ansible_default_ipv4.address }}"
-#     line: "{{ ansible_default_ipv4.address }} {{ inventory_hostname }} {{ ansible_hostname }}"
-#     state: present
-#     backup: true
-#   tags: network,hostname,dns
+- name: Template a file to /etc/myhosts
+  ansible.builtin.template:
+    src: ../templates/hosts.j2
+    dest: /etc/myhosts
+    mode: '0644'
+  when: inventory_hostname in groups['kubernetes']

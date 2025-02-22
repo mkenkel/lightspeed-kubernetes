@@ -1,0 +1,4 @@
+---
+#SPDX-License-Identifier: MIT-0
+dl_version: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }}"
+# vars file for 02-jumpbox

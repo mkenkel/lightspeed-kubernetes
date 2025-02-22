@@ -1,0 +1,19 @@
+---
+- name: Copy SSH Pub key out to the hosts's root accounts
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
+
+- name: (For fun) print the Operating System and Machine Type
+  ansible.builtin.debug:
+    msg: '{{ ansible_architecture }} || {{ ansible_distribution | trim }} {{ ansible_distribution_major_version }}'
+
+# - name: Make sure an entry in /etc/hosts exists
+#   ansible.builtin.lineinfile:
+#     path: /etc/hosts
+#     regexp: "^{{ ansible_default_ipv4.address }}"
+#     line: "{{ ansible_default_ipv4.address }} {{ inventory_hostname }} {{ ansible_hostname }}"
+#     state: present
+#     backup: true
+#   tags: network,hostname,dns

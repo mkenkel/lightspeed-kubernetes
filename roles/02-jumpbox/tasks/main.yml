@@ -1,0 +1,26 @@
+---
+#SPDX-License-Identifier: MIT-0
+- name: Create a directory for all files to download to
+  ansible.builtin.file:
+    path: './downloads'
+    state: 'directory'
+    mode: '0755'
+  delegate_to: localhost
+  connection: local
+
+- name: Create a directory for all files to download to
+  ansible.builtin.template:
+    src: '../templates/downloads.j2'
+    dest: './downloads.txt'
+    mode: '0755'
+  delegate_to: localhost
+  connection: local
+
+- name: Download all the files, based on the architecture of your OS
+  ansible.builtin.get_url:
+    url: '{{ item }}'
+    dest: ./downloads/.
+    mode: '0755'
+  with_lines: 'cat ./downloads.txt'
+  delegate_to: localhost
+  connection: local

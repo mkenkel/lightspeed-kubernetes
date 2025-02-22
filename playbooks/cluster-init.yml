@@ -1,50 +1,13 @@
 ---
 - name: Kubernetes Cluster Boot Strap Process
-  hosts: localhost
-  become: true
+  hosts: kubernetes
 
   vars_files: /Users/mkenkel/Repos/ansible-vault/farm-vault.yml
 
-  # pre_tasks:
-  #   - name: Include the Vaulted Variables
-  #     ansible.builtin.include_vars:
-  #       file: /home/matt/repos/ansible-vault/farm-vault.yml
-
-  # If you're wondering where the jumpbox is... the host running Ansible in the case would be the jump system, so nothing to prep for there.
   vars:
-    binaries_dir: /Users/mkenkel/kubernetes-init
-    jump_home_path: /Users/mkenkel
-    jump_user: mkenkel
 
   tasks:
-    - name: Clone the Kubernetes-the-hard-way repo locally alongside this repo.
-      ansible.builtin.git:
-        repo: 'https://github.com/kelseyhightower/kubernetes-the-hard-way.git'
-        dest: '{{ jump_home_path }}/kubernetes-the-hard-way'
-      delegate_to: localhost
 
-    - name: Create the downloads dir locally
-      ansible.builtin.file:
-        path: '{{ binaries_dir }}'
-        state: directory
-        mode: '0775'
-        owner: mkenkel
-        group: staff
-
-    - name: These are my downloads now 😎
-      ansible.builtin.get_url:
-        url: '{{ item }}'
-        dest: '{{ binaries_dir }}/.'
-        mode: '0775'
-        owner: mkenkel
-        group: staff
-      with_lines: cat ../../kubernetes-the-hard-way/downloads.txt
-      delegate_to: localhost
-
-    - name: Install kubectl via Homebrew (if on a Mac)
-      community.general.homebrew:
-        name: Kubernetes-cli
-        state: present
-      when: ansible_distribution == 'MacOSX'
-      delegate_to: localhost
-      become_user: '{{ jump_user }}'
+    - name: Role call
+      ansible.builtin.include_role:
+        name: 03-compute-resources

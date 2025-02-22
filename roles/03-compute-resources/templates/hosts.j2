@@ -1,0 +1,6 @@
+127.0.0.1 localhost localhost.localdomain localhost4 localhost4.localdomain4
+127.0.1.1       server.fatnutfarm.com server
+
+{% for i in groups['all'] %}
+{{ hostvars[i].ansible_facts.default_ipv4.address }} {{ hostvars[i].ansible_facts.fqdn }} {{ hostvars[i].inventory_hostname }}
+{% endfor %}

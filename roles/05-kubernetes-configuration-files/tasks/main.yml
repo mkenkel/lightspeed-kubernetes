@@ -1,0 +1,110 @@
+---
+- name: Dynamically generate kubeconfigs for worker nodes
+  ansible.builtin.shell:
+    cmd: |
+      kubectl config set-cluster kubernetes-the-hard-way \
+        --certificate-authority=ca.crt \
+        --embed-certs=true \
+        --server=https://server.{{ ansible_dns.domain }}:6443 \
+        --kubeconfig={{ item }}.kubeconfig
+
+      kubectl config set-credentials system:node:{{ item }} \
+        --client-certificate={{ item }}.crt \
+        --client-key={{ item }}.key \
+        --embed-certs=true \
+        --kubeconfig={{ item }}.kubeconfig
+
+      kubectl config set-context default \
+        --cluster=kubernetes-the-hard-way \
+        --user=system:node:{{ item }} \
+        --kubeconfig={{ item }}.kubeconfig
+
+      kubectl config use-context default \
+        --kubeconfig={{ item }}.kubeconfig
+    chdir: './certs'
+  run_once: true
+  delegate_to: localhost
+  with_items: "{{ groups['workers'] }}"
+
+- name: Generate kubeconfigs for proxy/scheduler/controller-manager
+  ansible.builtin.shell:
+    cmd: |
+      kubectl config set-cluster kubernetes-the-hard-way \
+        --certificate-authority=ca.crt \
+        --embed-certs=true \
+        --server=https://{{ item.server }}:6443 \
+        --kubeconfig={{ item.service }}.kubeconfig
+
+      kubectl config set-credentials {{ item.credentials }}{{ item.service }} \
+        --client-certificate={{ item.service }}.crt \
+        --client-key={{ item.service }}.key \
+        --embed-certs=true \
+        --kubeconfig={{ item.service }}.kubeconfig
+
+      kubectl config set-context default \
+        --cluster=kubernetes-the-hard-way \
+        --user={{ item.credentials }}{{ item.service }} \
+        --kubeconfig={{ item.service }}.kubeconfig
+
+      kubectl config use-context default \
+        --kubeconfig={{ item.service }}.kubeconfig
+    chdir: './certs'
+  run_once: true
+  delegate_to: localhost
+  loop:
+    - service: 'kube-proxy'
+      server: 'server.{{ ansible_dns.domain }}'
+      credentials: 'system:'
+    - service: 'kube-controller-manager'
+      server: 'server.{{ ansible_dns.domain }}'
+      credentials: 'system:'
+    - service: 'kube-scheduler'
+      server: 'server.{{ ansible_dns.domain }}'
+      credentials: 'system:'
+    - service: 'admin'
+      server: '127.0.0.1'
+      credentials: ''
+
+- name: WORKER NODE OPERATIONS
+  when: inventory_hostname in groups['workers']
+  block:
+    - name: Create the kube dirs
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        recurse: true
+      loop:
+        - '/var/lib/kube-proxy-test'
+        - '/var/lib/kubelet-test'
+
+    - name: Copy over the files to the previously created dirs.
+      ansible.builtin.copy:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: './certs/kube-proxy.kubeconfig'
+          dest: '/var/lib/kube-proxy-test/kubeconfig'
+        - src: './certs/{{ ansible_hostname }}.kubeconfig'
+          dest: '/var/lib/kubelet-test/kubeconfig'
+
+- name: MASTER NODE OPERATIONS
+  when: inventory_hostname in groups['masters']
+  block:
+    - name: Create safe dir (temporary)
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+      loop:
+        - '/root/kubeconfigs'
+
+    - name: Copy kubeconfigs
+      ansible.builtin.copy:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: './certs/admin.kubeconfig'
+          dest: '/root/kubeconfigs/.'
+        - src: './certs/kube-controller-manager.kubeconfig'
+          dest: '/root/kubeconfigs/.'
+        - src: './certs/kube-scheduler.kubeconfig'
+          dest: '/root/kubeconfigs/.'

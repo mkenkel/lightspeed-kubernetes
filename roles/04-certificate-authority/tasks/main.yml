@@ -1,0 +1,104 @@
+---
+# TODO: Come back and change kubelet-test to kubelet when we're going for the next run.
+- name: Create a directory for all certs
+  ansible.builtin.file:
+    path: './certs'
+    state: 'directory'
+    mode: '0755'
+  run_once: true
+  delegate_to: localhost
+
+- name: Template out the ca.conf locally
+  ansible.builtin.template:
+    src: '../templates/ca.j2'
+    dest: './certs/ca.conf'
+    mode: '0755'
+  run_once: true
+  delegate_to: localhost
+
+- name: Generate the ca.key and ca.crt
+  ansible.builtin.shell:
+    cmd: |
+      openssl genrsa -out ca.key 4096
+      openssl req -x509 -new -sha512 -noenc -key ca.key -days 3653 -config ca.conf -out ca.crt
+    chdir: './certs'
+  run_once: true
+  delegate_to: localhost
+
+- name: Client/Server key creation (Worker nodes)
+  ansible.builtin.shell:
+    cmd: |
+      openssl genrsa -out {{ item }}.key 4096
+      openssl req -new -key {{ item }}.key -sha256 -config ca.conf -section {{ item }} -out {{ item }}.csr
+      openssl x509 -req -days 3653 -in {{ item }}.csr -copy_extensions copyall -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out {{ item }}.crt
+    chdir: './certs'
+  run_once: true
+  delegate_to: localhost
+  with_items: "{{ groups['workers'] }}"
+
+- name: Client/Server key creation (everything else)
+  ansible.builtin.shell:
+    cmd: |
+      openssl genrsa -out {{ item }}.key 4096
+      openssl req -new -key {{ item }}.key -sha256 -config ca.conf -section {{ item }} -out {{ item }}.csr
+      openssl x509 -req -days 3653 -in {{ item }}.csr -copy_extensions copyall -sha256 -CA ca.crt -CAkey ca.key -CAcreateserial -out {{ item }}.crt
+    chdir: './certs'
+  run_once: true
+  delegate_to: localhost
+  loop:
+    - admin
+    - kube-proxy
+    - kube-scheduler
+    - kube-controller-manager
+    - kube-api-server
+    - service-accounts
+
+- name: Distribute the keys accordingly on the worker nodes
+  when: inventory_hostname in groups['workers']
+  block:
+    - name: Create the kubelet directory
+      ansible.builtin.file:
+        path: '/var/lib/kubelet-test'
+        state: 'directory'
+
+    - name: Copy ca.crt out to /var/lib/kubelet-test/
+      ansible.builtin.copy:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: './certs/ca.crt'
+          dest: '/var/lib/kubelet-test/'
+        - src: './certs/{{ ansible_hostname }}.crt'
+          dest: '/var/lib/kubelet-test/kubelet.crt'
+        - src: './certs/{{ ansible_hostname }}.key'
+          dest: '/var/lib/kubelet-test/kubelet.key'
+
+#TBD: Finish this later
+- name: Bootstrap crt and key files for etcd and the control plane (Step 7 and 8'ish)
+  when: inventory_hostname in groups['masters']
+  block:
+    - name: etcd dirs
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        mode: '0700'
+        recurse: true
+      loop:
+        - '/etc/etcd-test/'
+        - '/var/lib/etcd-test/'
+
+    - name: kubernetes dirs
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        recurse: true
+      loop:
+        - '/var/lib/kubernetes-test/'
+
+    - name: Copy out crts and keys
+      ansible.builtin.copy:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: './certs/ca.crt'
+          dest: '/var/lib/kubelet-test/'

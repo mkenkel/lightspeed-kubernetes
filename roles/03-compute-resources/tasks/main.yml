@@ -1,7 +1,4 @@
 ---
-- name: Gather facts rq
-  ansible.builtin.gather_facts:
-
 - name: Copy SSH Pub key out to the hosts's root accounts
   ansible.posix.authorized_key:
     user: root
@@ -18,3 +15,5 @@
     dest: /etc/myhosts
     mode: '0644'
   when: inventory_hostname in groups['kubernetes']
+
+# Again, I'd say let's copy /etc/hosts to local... but we're running NixOS rn

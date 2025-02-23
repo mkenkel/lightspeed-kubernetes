@@ -3,7 +3,10 @@
   hosts: kubernetes
   gather_facts: true
 
-  vars_files: /Users/mkenkel/Repos/ansible-vault/farm-vault.yml
+  collections:
+    - ansible.posix
+    - community.crypto
+    - community.general
 
   vars:
 
@@ -11,4 +14,9 @@
 
     - name: Role call
       ansible.builtin.include_role:
-        name: 03-compute-resources
+        name: '{{ item }}'
+      loop:
+        # - '02-jumpbox'
+        # - '03-compute-resources'
+        # - '04-certificate-authority'
+        - '05-kubernetes-configuration-files'

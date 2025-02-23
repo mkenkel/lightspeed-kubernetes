@@ -1,3 +1,6 @@
 ansible.cfg
 playbooks/downloads/
 playbooks/downloads.txt
+playbooks/certs/
+ansible-navigator.log
+ansible-navigator.yml

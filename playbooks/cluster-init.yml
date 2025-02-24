@@ -9,6 +9,15 @@
     - community.general
 
   vars:
+    # Determines the pkg platform.
+    cpu-pkg: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }}"
+    # Centralized pkg version control
+    etcd-v: 'v3.4.34'
+    k8s-v: 'v1.31.2'
+    containerd-v: '2.0.0'
+    cnet-v: 'v1.6.0'
+    crit-v: 'v1.31.1'
+    runc-v: 'v1.2.1'
 
   tasks:
 

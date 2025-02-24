@@ -1,0 +1,5 @@
+---
+- name: Copy down the latest revision of etcd
+  ansible.builtin.get_url:
+    url: 'https://github.com/etcd-io/etcd/releases/download/{{ etcd-v | default "v3.4.34" }}/{{ etcd-v | default "v3.4.34" }}-linux-{{ cpu-pkg }}.tar.gz'
+    dest:

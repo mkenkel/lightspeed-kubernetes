@@ -1,11 +1,11 @@
-https://dl.k8s.io/v1.31.2/bin/linux/{{ dl_version }}/kubectl
-https://dl.k8s.io/v1.31.2/bin/linux/{{ dl_version }}/kube-apiserver
-https://dl.k8s.io/v1.31.2/bin/linux/{{ dl_version }}/kube-controller-manager
-https://dl.k8s.io/v1.31.2/bin/linux/{{ dl_version }}/kube-scheduler
-https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.31.1/crictl-v1.31.1-linux-{{ dl_version }}.tar.gz
-https://github.com/opencontainers/runc/releases/download/v1.2.1/runc.{{ dl_version }}
-https://github.com/containernetworking/plugins/releases/download/v1.6.0/cni-plugins-linux-{{ dl_version }}-v1.6.0.tgz
-https://github.com/containerd/containerd/releases/download/v2.0.0/containerd-2.0.0-linux-{{ dl_version }}.tar.gz
-https://dl.k8s.io/v1.31.2/bin/linux/{{ dl_version }}/kube-proxy
-https://dl.k8s.io/v1.31.2/bin/linux/{{ dl_version }}/kubelet
-https://github.com/etcd-io/etcd/releases/download/v3.4.34/etcd-v3.4.34-linux-{{ dl_version }}.tar.gz
+https://dl.k8s.io/{{ k8s-v }}/bin/linux/{{ cpu-pkg }}/kube-apiserver
+https://dl.k8s.io/{{ k8s-v }}/bin/linux/{{ cpu-pkg }}/kube-controller-manager
+https://dl.k8s.io/{{ k8s-v }}/bin/linux/{{ cpu-pkg }}/kube-proxy
+https://dl.k8s.io/{{ k8s-v }}/bin/linux/{{ cpu-pkg }}/kube-scheduler
+https://dl.k8s.io/{{ k8s-v }}/bin/linux/{{ cpu-pkg }}/kubectl
+https://dl.k8s.io/{{ k8s-v }}/bin/linux/{{ cpu-pkg }}/kubelet
+https://github.com/containerd/containerd/releases/download/v{{ containerd-v }}/containerd-{{ containerd-v }}-linux-{{ cpu-pkg }}.tar.gz
+https://github.com/containernetworking/plugins/releases/download/{{ cnet-v }}/cni-plugins-linux-{{ cpu-pkg }}-{{ cnet-v }}.tgz
+https://github.com/etcd-io/etcd/releases/download/{{ etcd-v }}/etcd-{{ etcd-v }}-linux-{{ cpu-pkg }}.tar.gz
+https://github.com/kubernetes-sigs/cri-tools/releases/download/{{ crit-v }}/crictl-{{ crit-v }}-linux-{{ cpu-pkg }}.tar.gz
+https://github.com/opencontainers/runc/releases/download/{{ runc-v }}/runc.{{ cpu-pkg }}

@@ -14,7 +14,7 @@
     # Centralized pkg version control
     etcd-v: 'v3.4.34'
     k8s-v: 'v1.31.2'
-    containerd-v: '2.0.0'
+    containerd-v: '2.0.0' # Omit the 'v' as the filename isn't the same...
     cnet-v: 'v1.6.0'
     crit-v: 'v1.31.1'
     runc-v: 'v1.2.1'

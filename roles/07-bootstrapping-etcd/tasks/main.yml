@@ -1,5 +1,29 @@
 ---
-- name: Copy down the latest revision of etcd
-  ansible.builtin.get_url:
-    url: 'https://github.com/etcd-io/etcd/releases/download/{{ etcd-v | default "v3.4.34" }}/{{ etcd-v | default "v3.4.34" }}-linux-{{ cpu-pkg }}.tar.gz'
-    dest:
+- name: Unarchive etcd right to where it need be going
+  ansible.builtin.unarchive:
+    src: 'https://github.com/etcd-io/etcd/releases/download/{{ etcd-v | default "v3.4.34" }}/{{ etcd-v | default "v3.4.34" }}-linux-{{ cpu-pkg }}.tar.gz'
+    dest: /usr/local/bin
+    remote_src: true
+
+- name: Copy over the etcd service file
+  ansible.builtin.template:
+    src: ../templates/etcd.j2
+    dest: /etc/systemd/system/etcd.service
+
+- name: Etcd Configuration
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: 'directory'
+    mode: '0700'
+  loop:
+    - '/var/lib/etcd'
+
+- name: Copy out the kube-api-server key and crt
+  when: inventory_hostname in groups['masters']
+  ansible.builtin.copy:
+    src: '{{ item.src }}'
+    dest: '/etc/etcd/'
+  loop:
+    - './certs/ca.crt'
+    - './certs/kube-api-server.key'
+    - './certs/kube-api-server.crt'

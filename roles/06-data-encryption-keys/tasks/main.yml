@@ -5,6 +5,16 @@
 
 - name: Generate the Data Encryptuion Config and Key, and copy to master
   when: inventory_hostname in groups['masters']
-  ansible.builtin.template:
-    src: '../templates/encryption-config.j2'
-    dest: '/var/lib/kubernetes-test/encryption-config.yaml'
+  block:
+    - name: Create the kube dir
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+      loop:
+        - '/var/lib/kubernetes'
+
+    - name: Template out the encryption file
+      ansible.builtin.template:
+        src: '../templates/encryption-config.j2'
+        dest: '/var/lib/kubernetes/encryption-config.yaml'
+

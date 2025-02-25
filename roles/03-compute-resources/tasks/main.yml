@@ -1,5 +1,5 @@
 ---
-- name: Copy SSH Pub key out to the hosts's root accounts
+- name: Copy SSH Pub key out from localhost to the server's root accounts
   ansible.posix.authorized_key:
     user: root
     state: present

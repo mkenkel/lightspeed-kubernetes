@@ -1,0 +1,100 @@
+---
+- name: Limit tasks to workers
+  when: inventory_hostname in groups['workers']
+  block:
+    - name: Create all the installation directories first
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        recurse: true
+      loop:
+        - '/etc/cni/net.d'
+        - '/opt/cni/bin'
+        - '/var/lib/kubelet'
+        - '/var/lib/kube-proxy'
+        - '/var/lib/kubernetes'
+        - '/var/run/kubernetes'
+        - '/etc/containerd'
+
+    - name: Fetch the readily-available binaries
+      ansible.builtin.get_url:
+        url: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+        mode: 'a+x'
+      loop:
+        - src: '{{ kubectl_url }}'
+          dest: '/usr/local/bin'
+        - src: '{{ kube-proxy_url }}'
+          dest: '/usr/local/bin'
+        - src: '{{ kubelet_url }}'
+          dest: '/usr/local/bin'
+        - src: '{{ runc_url }}'
+          dest: '/usr/local/bin/runc'
+
+    - name: Install the other worker binaries
+      ansible.builtin.unarchive:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+        remote_src: true
+        extra_opts: '{{ item.extra_opts }}'
+        mode: 'a+x'
+      loop:
+        - src: '{{ cni-plugins_url }}'
+          dest: '/opt/cni/bin'
+          extra_opts: ''
+        - src: '{{ containerd_url }}'
+          dest: '/bin/'
+          extra_opts: "['--strip-components=1', '--show-stored-names']"
+        - src: '{{ crictl_url }}'
+          dest: '/usr/local/bin'
+          extra_opts: ''
+
+    - name: Template out CNI Networking
+      ansible.builtin.template:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: ../templates/10-bridge.j2
+          dest: /etc/cni/net.d/
+        - src: ../templates/99-loopback.j2
+          dest: /etc/cni/net.d/
+
+    - name: Template out containerd...kubelet... and kubernetes-proxy
+      ansible.builtin.template:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: ../templates/containerd-config.j2
+          dest: /etc/containerd/config.toml
+        - src: ../templates/containerd.j2
+          dest: /etc/systemd/system/containerd.service
+        - src: ../templates/kubelet-config.j2
+          dest: /var/lib/kubelet/kubelet-config.yaml
+        - src: ../templates/kubelet.j2
+          dest: /etc/systemd/system/kubelet.service
+        - src: ../templates/kube-proxy-config.j2
+          dest: /var/lib/kube-proxy/kube-proxy-config.yaml
+        - src: ../templates/kube-proxy.j2
+          dest: /etc/systemd/system/kube-proxy.service
+
+    - name: systemctl daemon-reload all the services mentioned above
+      ansible.builtin.systemd_service:
+        name: '{{ item }}'
+        daemon_reload: true
+        enabled: true
+        state: started
+      loop:
+        - containerd
+        - kubelet
+        - kube-proxy
+
+- name: The moment of truth...
+  when: inventory_hostname in groups['masters']
+  block:
+    - name: Checking the nodes
+      ansible.builtin.command: 'kubectl get nodes --kubeconfig admin.kubeconfig'
+      register: get-nodes_status
+
+    - name: Print output
+      ansible.builtin.debug:
+        msg: '{{ get-nodes_status.stdout_lines }}'

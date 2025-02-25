@@ -1,0 +1,116 @@
+---
+# Again, remove test mentions here later on
+- name: Limit tasks to master (or in this case 'controller') nodes
+  when: inventory_hostname in groups['masters']
+  block:
+    - name: Kubernetes Configuration directory
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        recurse: true
+      loop:
+        - '/etc/kubernetes/config'
+        - '/var/lib/kubernetes-test/'
+
+    - name: Installing the Kubernetes Controller Binaries
+      ansible.builtin.get_url:
+        url: '{{ item }}'
+        dest: /usr/local/bin
+        mode: 'a+x'
+      loop:
+        - '{{ kube-apiserver_url }}'
+        - '{{ kube-controller-manager_url }}'
+        - '{{ kube-scheduler_url }}'
+        - '{{ kubectl_url }}'
+
+    - name: Copy out keys and crts for the api-server
+      ansible.builtin.copy:
+        src: '{{ item.src }}'
+        dest: '/var/lib/kubernetes'
+      loop:
+        - './certs/kube-api-server.crt'
+        - './certs/kube-api-server.key'
+        - './certs/service-accounts.crt'
+        - './certs/service-accounts.key'
+
+      # Encryption.yaml is being taken care of in part 6.
+    - name: Copy over the systemd services
+      ansible.builtin.template:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: ../templates/kube-apiserver.j2
+          dest: /etc/systemd/system/kube-apiserver.service
+        - src: ../templates/kube-scheduler.j2
+          dest: /etc/systemd/system/kube-scheduler.service
+        - src: ../templates/kube-controller-manager.j2
+          dest: /etc/systemd/system/kube-controller-manager.service
+
+    - name: Copy over the kubeconfigs
+      ansible.builtin.copy:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: './certs/kube-scheduler.kubeconfig'
+          dest: '/var/lib/kubernetes'
+        - src: './certs/kube-controller-manager.kubeconfig'
+          dest: '/var/lib/kubernetes'
+
+    - name: mv kube-scheduler-yml.j2 to /etc/kubernetes/config/kube-scheduler.yaml
+      ansible.builtin.template:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: ../templates/kube-scheduler-yml.j2
+          dest: /etc/kubernetes/config/kube-scheduler.yaml
+
+    - name: Copy out the kube-api-server-to-kubelet.yaml
+      ansible.builtin.template:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: ../templates/kube-api-server-to-kubelet.j2
+          dest: /etc/systemd/system/kube-apiserver.service
+
+    - name: systemctl daemon-reload all the services mentioned above
+      ansible.builtin.systemd_service:
+        name: '{{ item }}'
+        daemon_reload: true
+        enabled: true
+        state: started
+      loop:
+        - kube-apiserver
+        - kube-controller-manager
+        - kube-scheduler
+
+    - name: Pause for 10 seconds (...I'm doing 5 though because I can)
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: Verify cluster-info returns data
+      block:
+        - name: Run the Command
+          ansible.builtin.command: 'kubectl cluster-info --kubeconfig admin.kubeconfig'
+          register: cluster-info_status
+
+        - name: Print output
+          ansible.builtin.debug:
+            msg: '{{ cluster-info_status.stdout_lines }}'
+
+    - name: RBAC for Kubelet Authorization
+      block:
+        - name: Apply rules
+          ansible.builtin.command: 'kubectl apply -f kube-apiserver-to-kubelet.yaml --kubeconfig admin.kubeconfig'
+          register: apply_status
+
+        - name: Print output
+          ansible.builtin.debug:
+            msg: '{{ apply_status.stdout_lines }}'
+
+        - name: Make an HTTP request for kubernetes version info
+          ansible.builtin.command: 'curl -k --cacert ca.crt https://server.{{ ansible_dns.domain }}:6443/version'
+          register: kube_info
+
+        - name: Print output
+          ansible.builtin.debug:
+            msg: '{{ kube_info.stdout_lines }}'

@@ -74,8 +74,8 @@
         state: 'directory'
         recurse: true
       loop:
-        - '/var/lib/kube-proxy-test'
-        - '/var/lib/kubelet-test'
+        - '/var/lib/kube-proxy'
+        - '/var/lib/kubelet'
 
     - name: Copy over the files to the previously created dirs.
       ansible.builtin.copy:
@@ -83,9 +83,9 @@
         dest: '{{ item.dest }}'
       loop:
         - src: './certs/kube-proxy.kubeconfig'
-          dest: '/var/lib/kube-proxy-test/kubeconfig'
+          dest: '/var/lib/kube-proxy/kubeconfig'
         - src: './certs/{{ ansible_hostname }}.kubeconfig'
-          dest: '/var/lib/kubelet-test/kubeconfig'
+          dest: '/var/lib/kubelet/kubeconfig'
 
 - name: MASTER NODE OPERATIONS
   when: inventory_hostname in groups['masters']

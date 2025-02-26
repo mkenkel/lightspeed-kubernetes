@@ -1,5 +1,5 @@
 ---
-# TODO: Come back and change kubelet-test to kubelet when we're going for the next run.
+# TODO: Come back and change kubelet to kubelet when we're going for the next run.
 - name: Create a directory for all certs
   ansible.builtin.file:
     path: './certs'
@@ -58,18 +58,18 @@
   block:
     - name: Create the kubelet directory
       ansible.builtin.file:
-        path: '/var/lib/kubelet-test'
+        path: '/var/lib/kubelet'
         state: 'directory'
 
-    - name: Copy ca.crt out to /var/lib/kubelet-test/
+    - name: Copy ca.crt out to /var/lib/kubelet/
       ansible.builtin.copy:
         src: '{{ item.src }}'
         dest: '{{ item.dest }}'
       loop:
         - src: './certs/ca.crt'
-          dest: '/var/lib/kubelet-test/'
+          dest: '/var/lib/kubelet/'
         - src: './certs/{{ ansible_hostname }}.crt'
-          dest: '/var/lib/kubelet-test/kubelet.crt'
+          dest: '/var/lib/kubelet/kubelet.crt'
         - src: './certs/{{ ansible_hostname }}.key'
-          dest: '/var/lib/kubelet-test/kubelet.key'
+          dest: '/var/lib/kubelet/kubelet.key'
 

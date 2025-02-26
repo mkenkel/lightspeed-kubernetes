@@ -1,5 +1,4 @@
 ---
-# Again, remove test mentions here later on
 - name: Limit tasks to master (or in this case 'controller') nodes
   when: inventory_hostname in groups['masters']
   block:
@@ -10,7 +9,7 @@
         recurse: true
       loop:
         - '/etc/kubernetes/config'
-        - '/var/lib/kubernetes-test/'
+        - '/var/lib/kubernetes/'
 
     - name: Installing the Kubernetes Controller Binaries
       ansible.builtin.get_url:

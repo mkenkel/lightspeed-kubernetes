@@ -1,3 +1,4 @@
+---
 all:
   vars:
     # Stowing amd64 - downloads.txt as vars for simplicity's sake here - maybe will revise the inclusion for architecture detection later, tbd.

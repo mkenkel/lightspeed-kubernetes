@@ -15,7 +15,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Download all the files, based on the architecture of your OS
+- name: Download all the files
   ansible.builtin.get_url:
     url: '{{ item }}'
     dest: ./downloads/.

@@ -12,12 +12,15 @@
 
   tasks:
 
-    - name: Role call
+    - name: Role call - Run the Kube steps
       ansible.builtin.include_role:
         name: '{{ item }}'
       loop:
-        # - '02-jumpbox'
-        # - '03-compute-resources'
-        # - '04-certificate-authority'
-        # - '05-kubernetes-configuration-files'
+        - '02-jumpbox'
+        - '03-compute-resources'
+        - '04-certificate-authority'
+        - '05-kubernetes-configuration-files'
+        - '06-kubernetes-configuration-files'
         - '07-bootstrapping-etcd'
+        - '08-bootstrapping-kubernetes-controllers'
+        - '09-bootstrapping-kubernetes-workers'

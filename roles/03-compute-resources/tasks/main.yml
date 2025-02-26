@@ -9,11 +9,18 @@
   ansible.builtin.debug:
     msg: '{{ ansible_architecture }} || {{ ansible_distribution | trim }} {{ ansible_distribution_major_version }}'
 
-- name: Template a file to /etc/myhosts
+- name: Template a file to /etc/hosts
   ansible.builtin.template:
     src: ../templates/hosts.j2
-    dest: /etc/myhosts
+    dest: /etc/hosts
     mode: '0644'
   when: inventory_hostname in groups['kubernetes']
 
-# Again, I'd say let's copy /etc/hosts to local... but we're running NixOS rn
+- name: Template a file to /etc/hosts locally
+  ansible.builtin.template:
+    src: ../templates/hosts.j2
+    dest: /etc/hosts
+    mode: '0644'
+  run_once: true
+  delegate_to: localhost
+  when: ansible_os_family != 'NixOS'

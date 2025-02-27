@@ -90,12 +90,6 @@
 - name: MASTER NODE OPERATIONS
   when: inventory_hostname in groups['masters']
   block:
-    - name: Create safe dir (temporary)
-      ansible.builtin.file:
-        path: '{{ item }}'
-        state: 'directory'
-      loop:
-        - '/root/kubeconfigs'
 
     - name: Copy kubeconfigs
       ansible.builtin.copy:
@@ -103,8 +97,4 @@
         dest: '{{ item.dest }}'
       loop:
         - src: './certs/admin.kubeconfig'
-          dest: '/root/kubeconfigs/.'
-        - src: './certs/kube-controller-manager.kubeconfig'
-          dest: '/root/kubeconfigs/.'
-        - src: './certs/kube-scheduler.kubeconfig'
-          dest: '/root/kubeconfigs/.'
+          dest: '/root/.'

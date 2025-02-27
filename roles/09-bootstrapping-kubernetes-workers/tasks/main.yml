@@ -24,7 +24,7 @@
       loop:
         - src: '{{ kubectl_url }}'
           dest: '/usr/local/bin'
-        - src: '{{ kube-proxy_url }}'
+        - src: '{{ kubeproxy_url }}'
           dest: '/usr/local/bin'
         - src: '{{ kubelet_url }}'
           dest: '/usr/local/bin'
@@ -39,7 +39,7 @@
         extra_opts: '{{ item.extra_opts }}'
         mode: 'a+x'
       loop:
-        - src: '{{ cni-plugins_url }}'
+        - src: '{{ cniplugins_url }}'
           dest: '/opt/cni/bin'
           extra_opts: ''
         - src: '{{ containerd_url }}'
@@ -93,8 +93,8 @@
   block:
     - name: Checking the nodes
       ansible.builtin.command: 'kubectl get nodes --kubeconfig admin.kubeconfig'
-      register: get-nodes_status
+      register: get_status
 
     - name: Print output
       ansible.builtin.debug:
-        msg: '{{ get-nodes_status.stdout_lines }}'
+        msg: '{{ get_status.stdout_lines }}'

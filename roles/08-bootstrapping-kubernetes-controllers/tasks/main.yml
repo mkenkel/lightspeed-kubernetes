@@ -17,16 +17,18 @@
         dest: /usr/local/bin
         mode: 'a+x'
       loop:
-        - '{{ kube-apiserver_url }}'
-        - '{{ kube-controller-manager_url }}'
-        - '{{ kube-scheduler_url }}'
+        - '{{ kubeapiserver_url }}'
+        - '{{ kubecontrollermanager_url }}'
+        - '{{ kubescheduler_url }}'
         - '{{ kubectl_url }}'
 
     - name: Copy out keys and crts for the api-server
       ansible.builtin.copy:
-        src: '{{ item.src }}'
+        src: '{{ item }}'
         dest: '/var/lib/kubernetes'
       loop:
+        - './certs/ca.crt'
+        - './certs/ca.key'
         - './certs/kube-api-server.crt'
         - './certs/kube-api-server.key'
         - './certs/service-accounts.crt'
@@ -69,7 +71,7 @@
         dest: '{{ item.dest }}'
       loop:
         - src: ../templates/kube-api-server-to-kubelet.j2
-          dest: /etc/systemd/system/kube-apiserver.service
+          dest: /root/kube-api-server-to-kubelet.yaml
 
     - name: systemctl daemon-reload all the services mentioned above
       ansible.builtin.systemd_service:
@@ -84,22 +86,26 @@
 
     - name: Pause for 10 seconds (...I'm doing 5 though because I can)
       ansible.builtin.pause:
-        seconds: 5
+        seconds: 10
 
     - name: Verify cluster-info returns data
+      when: inventory_hostname in groups['masters']
       block:
         - name: Run the Command
           ansible.builtin.command: 'kubectl cluster-info --kubeconfig admin.kubeconfig'
-          register: cluster-info_status
+          register: cluster_status
 
         - name: Print output
           ansible.builtin.debug:
-            msg: '{{ cluster-info_status.stdout_lines }}'
+            msg: '{{ cluster_status.stdout_lines }}'
 
     - name: RBAC for Kubelet Authorization
+      when: inventory_hostname in groups['masters']
       block:
         - name: Apply rules
           ansible.builtin.command: 'kubectl apply -f kube-apiserver-to-kubelet.yaml --kubeconfig admin.kubeconfig'
+          args:
+            chdir: '/root'
           register: apply_status
 
         - name: Print output

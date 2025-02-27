@@ -31,6 +31,14 @@
         - './certs/kube-api-server.key'
         - './certs/kube-api-server.crt'
 
+    - name: Copy over the systemd services
+      ansible.builtin.template:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      loop:
+        - src: ../templates/etcd.j2
+          dest: /etc/systemd/system/etcd.service
+
     - name: systemctl daemon-reload, enable etcd and start the service
       ansible.builtin.systemd_service:
         name: etcd

@@ -16,11 +16,11 @@
     mode: '0644'
   when: inventory_hostname in groups['kubernetes']
 
-- name: Template a file to /etc/hosts locally
-  ansible.builtin.template:
-    src: ../templates/hosts.j2
-    dest: /etc/hosts
-    mode: '0644'
-  run_once: true
-  delegate_to: localhost
-  when: ansible_os_family != 'NixOS'
+# - name: Template a file to /etc/hosts locally
+#   ansible.builtin.template:
+#     src: ../templates/hosts.j2
+#     dest: /etc/hosts
+#     mode: '0644'
+#   run_once: true
+#   delegate_to: localhost
+#   when: ansible_os_family != 'NixOS'

@@ -20,7 +20,7 @@
         - '03-compute-resources'
         - '04-certificate-authority'
         - '05-kubernetes-configuration-files'
-        - '06-kubernetes-configuration-files'
+        - '06-data-encryption-keys'
         - '07-bootstrapping-etcd'
         - '08-bootstrapping-kubernetes-controllers'
         - '09-bootstrapping-kubernetes-workers'

@@ -103,7 +103,7 @@
       when: inventory_hostname in groups['masters']
       block:
         - name: Apply rules
-          ansible.builtin.command: 'kubectl apply -f kube-apiserver-to-kubelet.yaml --kubeconfig admin.kubeconfig'
+          ansible.builtin.command: 'kubectl apply -f kube-api-server-to-kubelet.yaml --kubeconfig admin.kubeconfig'
           args:
             chdir: '/root'
           register: apply_status
